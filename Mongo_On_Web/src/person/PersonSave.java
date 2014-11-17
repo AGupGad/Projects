@@ -7,7 +7,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 
 import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
@@ -15,7 +14,6 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import java.net.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -27,6 +25,7 @@ public class PersonSave extends HttpServlet {
     private static String UPLOAD_PATH= "C:\\mongodb\\bin\\data\\db\\FileUploads";
     private static String firstname;
     private static String lastname;
+	private static String filePath;
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
@@ -50,8 +49,9 @@ public void init(ServletConfig config)
         }
     }
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+	
 		try{
+			System.out.println("in do post");
 			DBCollection personCollection;	
 			DB db = mongo.getDB("test");
 			personCollection = db.getCollection("mongodbtest");
@@ -77,20 +77,29 @@ public void init(ServletConfig config)
 				else{			
 						for(FileItem fileItem: items){
 								if(!fileItem.isFormField()){
-									String filePath = fileItem.getName();
-									String fileName = filePath.substring(filePath.lastIndexOf("\\"));
+									filePath = fileItem.getName();
+									if(filePath.contains("//") || filePath.contains("\\")){
+										String fileName = filePath.substring(filePath.lastIndexOf("\\"));
+										System.out.println(fileName);
+										fileItem.write(new File(UPLOAD_PATH+ fileName));
+									}else{
+									String fileName = filePath;
 									System.out.println(fileName);
-									fileItem.write(new File(UPLOAD_PATH+ fileName));
+									String remoteFileUploadPath = UPLOAD_PATH+ "\\" + fileName;
+									fileItem.write(new File(remoteFileUploadPath ));
+									
+								}
+																	
 								}
 						}
 					
 					}
 				}
-					createPerson(person, personCollection);
+					createPerson(person, filePath,  personCollection);
 					response.setContentType("text/html");
 					request.setAttribute("firstname", firstname);
 					request.setAttribute("lastname", lastname);
-					request.getRequestDispatcher("/Confirmation.jsp").forward(request, response);
+					request.getRequestDispatcher("/AddConfirmation.jsp").forward(request, response);
 				}
 				catch (Exception e) {
 							// TODO Auto-generated catch block
@@ -98,7 +107,7 @@ public void init(ServletConfig config)
 						}	
 		
 		}
-		private static DBObject createDBObject(Person p, DBCollection c) {
+		private static DBObject createDBObject(Person p,String filePath, DBCollection c) {
 			 BasicDBObjectBuilder docBuilder = BasicDBObjectBuilder.start();  
 			try{
 				 
@@ -106,16 +115,18 @@ public void init(ServletConfig config)
 			      docBuilder.append("firstname", p.getFirstName());
 			      docBuilder.append("lastname", p.getLastName());
 			      docBuilder.append("haircolor", p.getHairColor());
+			      docBuilder.append("filepath", filePath);
 			      
 			  }catch(Exception e){
 				  System.out.println(e.toString());
 			  }
 			  return docBuilder.get();   
 		}
-		private static void  createPerson(Person person, DBCollection coll) {
+		private static void  createPerson(Person person, String filePath, DBCollection coll) {
 				try{
-					DBObject doc = PersonSave.createDBObject(person, coll);
+					DBObject doc = PersonSave.createDBObject(person, filePath , coll);
 					coll.insert(doc);
+					doc.put("documentPath", filePath);
 					}catch(Exception im){
 					System.out.println(im.toString());
 				}

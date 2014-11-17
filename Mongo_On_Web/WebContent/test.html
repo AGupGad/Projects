@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>Progress Bar Demo</title>
+ 
+<style type="text/css">
+@import "../resources/dojo.css";
+@import "../dijit/themes/tundra/tundra.css";
+</style>
+<script type="text/javascript" src="dojo.xd.js"
+djConfig="parseOnLoad: true"></script>
+<script type="text/javascript">
+dojo.require("dijit.ProgressBar");
+dojo.require("dojo.parser");
+function download(){
+// Split up bar into 5% segments
+numParts = Math.floor(100/5);
+jsProgress.update({ maximum: numParts, progress:0 });
+for (var i=0; i<=numParts; i++){
+// This plays update({progress:0}) at 1nn milliseconds,
+// update({progress:1}) at 2nn milliseconds, etc.
+setTimeout("jsProgress.update({ progress: " + i + " })",(i+1)*100 +
+Math.floor(Math.random()*100));
+}
+}
+</script>
+</head>
+Progress Bar:
+<body class="tundra">
+<div dojoType="dijit.ProgressBar" style="width:800px"
+jsId="jsProgress" id="downloadProgress"></div>
+<input type="button" value="Start" onclick="download();" />
+</body>
+</html>

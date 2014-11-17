@@ -1,10 +1,141 @@
-<jsp:useBean id="user" class="user.UserData" scope="session"/>
-<jsp:setProperty name="user" property="*"/> 
-<HTML>
-<BODY>
-You entered<BR>
-Name: <%= user.getUsername() %><BR>
-Email: <%= user.getEmail() %><BR>
-Age: <%= user.getAge() %><BR>
-</BODY>
-</HTML>
+
+<!DOCTYPE html>
+<html>
+<title>Person Manager</title>
+<head>
+<link rel="stylesheet"
+	href="js/dojo-release-1.10.2/dijit/themes/claro/claro.css">
+<script>
+	dojoConfig = {
+		parseOnLoad : true
+	};
+</script>
+<script src="js/dojo-release-1.10.2/dojo/dojo.js"></script>
+<script src="js/dojo-release-1.10.2/dojox/form/Uploader.js"></script>
+<script>
+	require([ "dojo/parser", "dijit/ProgressBar" ], function() {
+		var i = 0;
+		personSaveWidget = function() {
+			myProgressBar.set({
+				value : ++i
+			});
+			if (i < 10) {
+				setTimeout(personSaveWidget, 100 + Math.floor(Math.random() * 1000));
+			}
+		};
+	});
+</script>
+<script type="text/javascript">
+	function searchForm() {
+		var form = dojo.byId("searchForm");
+		dojo
+				.connect(
+						form,
+						"onsubmit",
+						function(event) {
+							dojo.stopEvent(event);
+
+							var xhrArgs = {
+								sync : true, // Makes it wait - default is false
+								url : ".\PersonSearch",
+								content : {
+									firstname_search :
+<%=request.getAttribute("firstname_search")%>
+	,
+									lastname_search :
+<%=request.getAttribute("lastname_search")%>
+	},
+								form : dojo.byId("searchForm"),
+								handleAs : "text",
+								load : function(data) {
+									dojo.byId("SearchResponse").innerHTML = "Form posted!!!.";
+								},
+								error : function(error) {
+									dojo.byId("SearchResponse").innerHTML = "Under Construction";
+								}
+							};
+							// Call the asynchronous xhrPost
+							dojo.byId("SearchResponse").innerHTML = "Form being sent...";
+							var deferred = dojo.xhrPost(xhrArgs);
+						});
+	}
+	dojo.ready(searchForm);
+</script>
+<script>
+	dojo.require("dijit.layout.TabContainer");
+	dojo.require("dijit.layout.ContentPane");
+</script>
+</head>
+<body class="claro">
+	<div data-dojo-type="dijit.layout.TabContainer" region="center"
+		style="width: 500px; height: 300px;" tabStrip="true">
+		<div data-dojo-type="dijit.layout.ContentPane"
+			data-dojo-props="region:'center'" title="Add" selected="true"
+			style="width: 50px; height: 150px;">
+			<form method="post" action="./PersonSave" id="myForm"
+				enctype="multipart/form-data">
+
+				<table style="border: 1px solid #9f9f9f;">
+					<tr>
+						<td><label for="fname">First Name:</label></td>
+						<td><input type="text" id="firstname" name="firstname"
+							size=20 data-dojo-type="dijit/form/ValidationTextBox" /></td>
+					</tr>
+					<tr>
+						<td><label for="lname">Last Name:</label></td>
+						<td><input type="text" id="lastname" name="lastname" size=20
+							data-dojo-type="dijit/form/ValidationTextBox" /></td>
+					<tr>
+							<td><input type="file" name="datafile" size="40"
+							data-dojo-type="dojox.form.Uploader"></td>
+					</tr>
+				</table>
+			</form>
+			
+			<button  
+				data-dojo-type="dijit/form/Button" name="submitButton"
+				value = "Submit" type="submit" onClick="personSaveWidget();">Submit</button>
+				<div data-dojo-type="dijit/ProgressBar" style="width: 300px"
+				data-dojo-id="myProgressBar" id="downloadProgress"
+				data-dojo-props="maximum:10"></div>
+
+		</div>
+		<div data-dojo-type="dijit.layout.ContentPane" title="Search">
+			<form method="post" id="searchForm">
+				<H3>Under Construction</H3>
+
+				<table style="border: 1px solid #9f9f9f;">
+					<tr>
+						<td><label for="fname">First Name:</label></td>
+						<td><input type="text" id="firstname_search"
+							name="firstname_search" size=20
+							data-dojo-type="dijit/form/ValidationTextBox" /></td>
+					</tr>
+					<tr>
+						<td><label for="lname">Last Name:</label></td>
+						<td><input type="text" id="lastname_search"
+							name="lastname_search" size=20
+							data-dojo-type="dijit/form/ValidationTextBox" /></td>
+				</table>
+				<button data-dojo-type="dijit/form/Button" type="submit"
+					id="searchButton" name="searchButton" value="Search">Search</button>
+
+			</form>
+			<b>Search Result</b>
+			<p id="SearchResponse"></p>
+		</div>
+
+
+		<div data-dojo-type="dijit.layout.ContentPane" title="Update">
+			<H3>Under Construction</H3>
+			This is where the functionality to update based on criteria would be
+			implemented
+		</div>
+		<div data-dojo-type="dijit.layout.ContentPane" title="Delete">
+			<H3>Under Construction</H3>
+			This is where the functionality to delete based on criteria would be
+			implemented
+		</div>
+	</div>
+</body>
+</html>
